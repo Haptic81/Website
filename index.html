@@ -81,7 +81,7 @@ stateLabel.Parent = frame
 
 local teleportButton = createButton("Teleport Up",75)
 local speedButton = createButton("Speed",115)
-local espButton = createButton("3D Box ESP",155)
+local espButton = createButton("ESP",155)
 
 local dragging = false
 local dragInput, dragStart, startPos
@@ -191,7 +191,7 @@ speedButton.MouseButton1Click:Connect(function()
     speedEnabled = not speedEnabled
     if speedEnabled then
         speedButton.BackgroundColor3 = Color3.fromRGB(80,80,80)
-        local SpeedValue = 57
+        local SpeedValue = 60
         local player = Players.LocalPlayer
         local character = player.Character or player.CharacterAdded:Wait()
         local root = character:WaitForChild("HumanoidRootPart")
@@ -234,37 +234,39 @@ speedButton.MouseButton1Click:Connect(function()
 end)
 
 local espEnabled = false
-local espHighlights = {}
+local espBoxes = {}
 
-local function addHighlightToCharacter(character)
-    if espHighlights[character] then return end
-    local highlight = Instance.new("Highlight")
-    highlight.Adornee = character
-    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    highlight.FillColor = Color3.fromRGB(0, 170, 255)
-    highlight.OutlineColor = Color3.fromRGB(0, 120, 200)
-    highlight.Parent = gui
-    espHighlights[character] = highlight
+local function addBoxToCharacter(character)
+    if espBoxes[character] then return end
+    local box = Instance.new("BoxHandleAdornment")
+    box.Adornee = character:FindFirstChild("HumanoidRootPart")
+    box.AlwaysOnTop = true
+    box.ZIndex = 10
+    box.Size = Vector3.new(2, 5, 1)
+    box.Transparency = 0.5
+    box.Color3 = Color3.new(1, 1, 1)
+    box.Parent = CoreGui
+    espBoxes[character] = box
 end
 
-local function removeHighlightFromCharacter(character)
-    if espHighlights[character] then
-        espHighlights[character]:Destroy()
-        espHighlights[character] = nil
+local function removeBoxFromCharacter(character)
+    if espBoxes[character] then
+        espBoxes[character]:Destroy()
+        espBoxes[character] = nil
     end
 end
 
 local function refreshESP()
-    for _, highlight in pairs(espHighlights) do
-        highlight:Destroy()
+    for char, box in pairs(espBoxes) do
+        box:Destroy()
     end
-    espHighlights = {}
+    espBoxes = {}
     if espEnabled then
         for _, player in pairs(Players:GetPlayers()) do
             if player ~= Players.LocalPlayer then
                 local character = player.Character
                 if character and character:FindFirstChild("HumanoidRootPart") then
-                    addHighlightToCharacter(character)
+                    addBoxToCharacter(character)
                 end
             end
         end
@@ -279,19 +281,19 @@ espButton.MouseButton1Click:Connect(function()
         Players.PlayerAdded:Connect(function(player)
             if espEnabled and player ~= Players.LocalPlayer then
                 player.CharacterAdded:Connect(function(character)
-                    addHighlightToCharacter(character)
+                    addBoxToCharacter(character)
                 end)
             end
         end)
         Players.PlayerRemoving:Connect(function(player)
-            removeHighlightFromCharacter(player.Character)
+            removeBoxFromCharacter(player.Character)
         end)
     else
         espButton.BackgroundColor3 = Color3.fromRGB(51,51,51)
-        for _, highlight in pairs(espHighlights) do
-            highlight:Destroy()
+        for _, box in pairs(espBoxes) do
+            box:Destroy()
         end
-        espHighlights = {}
+        espBoxes = {}
     end
 end)
 
@@ -300,12 +302,35 @@ local uiVisible = true
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.KeyCode == Enum.KeyCode.Insert then
-        if uiVisible then
-            frame.Visible = false
-            uiVisible = false
-        else
-            frame.Visible = true
-            uiVisible = true
+        uiVisible = not uiVisible
+        frame.Visible = uiVisible
+        if not uiVisible then
+            if moonGravityEnabled then
+                gravityButton.BackgroundColor3 = Color3.fromRGB(51,51,51)
+                stateLabel.Text = "OFF"
+                moonGravityEnabled = false
+                if gravityConnection then
+                    gravityConnection:Disconnect()
+                    gravityConnection = nil
+                end
+                resetGravity()
+            end
+            if speedEnabled then
+                speedButton.BackgroundColor3 = Color3.fromRGB(51,51,51)
+                speedEnabled = false
+                if speedConnection then
+                    speedConnection:Disconnect()
+                    speedConnection = nil
+                end
+            end
+            if espEnabled then
+                espButton.BackgroundColor3 = Color3.fromRGB(51,51,51)
+                espEnabled = false
+                for _, box in pairs(espBoxes) do
+                    box:Destroy()
+                end
+                espBoxes = {}
+            end
         end
     end
 end)
