@@ -1,13 +1,10 @@
 <pre>
-local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
-if CoreGui:FindFirstChild("HapticHubUI") then
-    CoreGui:FindFirstChild("HapticHubUI"):Destroy()
-end
+if CoreGui:FindFirstChild("HapticHubUI") then CoreGui.HapticHubUI:Destroy() end
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "HapticHubUI"
@@ -17,133 +14,82 @@ gui.Parent = CoreGui
 local frame = Instance.new("Frame")
 frame.AnchorPoint = Vector2.new(0.5, 0.5)
 frame.Position = UDim2.new(0.5, 0, 0.5, 0)
-frame.Size = UDim2.new(0,400,0,300)
-frame.BackgroundColor3 = Color3.fromRGB(34,34,34)
+frame.Size = UDim2.new(0, 400, 0, 320)
+frame.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
 frame.BorderSizePixel = 0
 frame.Visible = true
+frame.Active = true
+frame.Draggable = true
 frame.Parent = gui
 
-local title = Instance.new("TextLabel")
+frame.Size = UDim2.new(0, 0, 0, 0)
+local tween = game:GetService("TweenService"):Create(frame, TweenInfo.new(1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 400, 0, 320)})
+tween:Play()
+
+local title = Instance.new("TextLabel", frame)
 title.Text = "HapticHub"
 title.Font = Enum.Font.SourceSansBold
 title.TextSize = 20
-title.TextColor3 = Color3.fromRGB(255,255,255)
+title.TextColor3 = Color3.new(1, 1, 1)
 title.BackgroundTransparency = 1
 title.Size = UDim2.new(0, 200, 0, 30)
 title.Position = UDim2.new(0, 10, 0, 0)
 title.TextXAlignment = Enum.TextXAlignment.Left
-title.Parent = frame
 
-local madeByLabel = Instance.new("TextLabel")
+local madeByLabel = Instance.new("TextLabel", frame)
 madeByLabel.Text = "Made By Haptic"
 madeByLabel.Font = Enum.Font.SourceSans
 madeByLabel.TextSize = 12
-madeByLabel.TextColor3 = Color3.fromRGB(150,150,150)
+madeByLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
 madeByLabel.BackgroundTransparency = 1
 madeByLabel.Size = UDim2.new(0, 200, 0, 20)
 madeByLabel.Position = UDim2.new(0, 10, 1, -25)
 madeByLabel.TextXAlignment = Enum.TextXAlignment.Left
-madeByLabel.Parent = frame
-
-local gearIcon = Instance.new("ImageButton")
-gearIcon.Size = UDim2.new(0,24,0,24)
-gearIcon.Position = UDim2.new(1,-28,0,3)
-gearIcon.AnchorPoint = Vector2.new(0,0)
-gearIcon.Image = "rbxassetid://6726110621"
-gearIcon.BackgroundTransparency = 1
-gearIcon.Parent = frame
 
 local function createButton(text, yPos)
-    local btn = Instance.new("TextButton")
+    local btn = Instance.new("TextButton", frame)
     btn.Text = text
     btn.Font = Enum.Font.SourceSans
     btn.TextSize = 16
-    btn.TextColor3 = Color3.fromRGB(255,255,255)
-    btn.BackgroundColor3 = Color3.fromRGB(51,51,51)
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.BackgroundColor3 = Color3.fromRGB(51, 51, 51)
     btn.BorderSizePixel = 0
-    btn.Size = UDim2.new(0,130,0,30)
-    btn.Position = UDim2.new(0,10,0,yPos)
-    btn.Parent = frame
+    btn.Size = UDim2.new(0, 130, 0, 30)
+    btn.Position = UDim2.new(0, 10, 0, yPos)
     return btn
 end
 
-local gravityButton = createButton("Moon Gravity",35)
-local stateLabel = Instance.new("TextLabel")
-stateLabel.Text = "OFF"
-stateLabel.Font = Enum.Font.SourceSans
-stateLabel.TextSize = 14
-stateLabel.TextColor3 = Color3.fromRGB(200,200,200)
-stateLabel.BackgroundTransparency = 1
-stateLabel.Size = UDim2.new(0,40,0,30)
-stateLabel.Position = UDim2.new(0,150,0,35)
-stateLabel.TextXAlignment = Enum.TextXAlignment.Left
-stateLabel.Parent = frame
-
-local teleportButton = createButton("Teleport Up",75)
-local speedButton = createButton("Speed",115)
-local espButton = createButton("ESP",155)
-
-local dragging = false
-local dragInput, dragStart, startPos
-
-title.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = frame.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
-end)
-
-title.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInput = input
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and input == dragInput then
-        local delta = input.Position - dragStart
-        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
+local gravityButton = createButton("Moon Gravity", 35)
+local teleportButton = createButton("Teleport Up", 75)
+local speedButton = createButton("Speed", 115)
+local espButton = createButton("ESP", 155)
+local shopButton = createButton("Shop GUI", 195)
 
 local moonGravityEnabled = false
 local gravityConnection
 
 local function resetGravity()
-    local character = Players.LocalPlayer.Character
-    if character then
-        local humanoid = character:FindFirstChildWhichIsA("Humanoid")
-        if humanoid then
-            humanoid.JumpPower = 50
-        end
+    local char = Players.LocalPlayer.Character
+    if char then
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        if humanoid then humanoid.JumpPower = 50 end
     end
 end
 
 gravityButton.MouseButton1Click:Connect(function()
     moonGravityEnabled = not moonGravityEnabled
     if moonGravityEnabled then
-        gravityButton.BackgroundColor3 = Color3.fromRGB(80,80,80)
-        stateLabel.Text = "ON"
-        local character = Players.LocalPlayer.Character
-        if character then
-            local humanoid = character:FindFirstChildWhichIsA("Humanoid")
-            local root = character:FindFirstChild("HumanoidRootPart")
+        gravityButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+        local char = Players.LocalPlayer.Character
+        if char then
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            local root = char:FindFirstChild("HumanoidRootPart")
             if humanoid and root then
                 humanoid.UseJumpPower = true
                 humanoid.JumpPower = 96
                 if gravityConnection then gravityConnection:Disconnect() end
                 gravityConnection = RunService.Stepped:Connect(function()
-                    if not moonGravityEnabled then
-                        gravityConnection:Disconnect()
-                        resetGravity()
-                        return
-                    end
+                    if not moonGravityEnabled then return end
                     if root.Velocity.Y < 0 then
                         root.Velocity = Vector3.new(root.Velocity.X, root.Velocity.Y * 0.9, root.Velocity.Z)
                     end
@@ -151,28 +97,24 @@ gravityButton.MouseButton1Click:Connect(function()
             end
         end
     else
-        gravityButton.BackgroundColor3 = Color3.fromRGB(51,51,51)
-        stateLabel.Text = "OFF"
-        if gravityConnection then
-            gravityConnection:Disconnect()
-            gravityConnection = nil
-        end
+        gravityButton.BackgroundColor3 = Color3.fromRGB(51, 51, 51)
+        if gravityConnection then gravityConnection:Disconnect() end
+        gravityConnection = nil
         resetGravity()
     end
 end)
 
 local teleportUp = true
-
 teleportButton.MouseButton1Click:Connect(function()
-    local character = Players.LocalPlayer.Character
-    if character then
-        local root = character:FindFirstChild("HumanoidRootPart")
+    local char = Players.LocalPlayer.Character
+    if char then
+        local root = char:FindFirstChild("HumanoidRootPart")
         if root then
             if teleportUp then
-                root.CFrame = root.CFrame + Vector3.new(0,150,0)
+                root.CFrame = root.CFrame + Vector3.new(0, 150, 0)
                 teleportButton.Text = "Teleport Down"
             else
-                root.CFrame = root.CFrame - Vector3.new(0,189,0)
+                root.CFrame = root.CFrame - Vector3.new(0, 189, 0)
                 teleportButton.Text = "Teleport Up"
             end
             teleportUp = not teleportUp
@@ -182,113 +124,145 @@ end)
 
 local speedEnabled = false
 local speedConnection
+local speedValue = 60
 
 speedButton.MouseButton1Click:Connect(function()
     speedEnabled = not speedEnabled
     if speedEnabled then
-        speedButton.BackgroundColor3 = Color3.fromRGB(80,80,80)
-        local SpeedValue = 55.4
+        speedButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
         local player = Players.LocalPlayer
-        local character = player.Character or player.CharacterAdded:Wait()
-        local root = character:WaitForChild("HumanoidRootPart")
+        local char = player.Character or player.CharacterAdded:Wait()
+        local root = char:WaitForChild("HumanoidRootPart")
         local camera = workspace.CurrentCamera
         if speedConnection then speedConnection:Disconnect() end
         speedConnection = RunService.RenderStepped:Connect(function()
-            if not speedEnabled then
-                speedConnection:Disconnect()
-                speedConnection = nil
-                root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
-                return
-            end
-            local moveVector = Vector3.zero
-            if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-                moveVector += camera.CFrame.LookVector
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-                moveVector -= camera.CFrame.LookVector
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-                moveVector -= camera.CFrame.RightVector
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-                moveVector += camera.CFrame.RightVector
-            end
-            if moveVector.Magnitude > 0 then
-                moveVector = moveVector.Unit * SpeedValue
+            if not speedEnabled then return end
+            local mv = Vector3.zero
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then mv += camera.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then mv -= camera.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then mv -= camera.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then mv += camera.CFrame.RightVector end
+            if mv.Magnitude > 0 then
+                mv = mv.Unit * speedValue
             else
-                moveVector = Vector3.zero
+                mv = Vector3.zero
             end
-            root.AssemblyLinearVelocity = Vector3.new(moveVector.X, root.AssemblyLinearVelocity.Y, moveVector.Z)
+            root.AssemblyLinearVelocity = Vector3.new(mv.X, root.AssemblyLinearVelocity.Y, mv.Z)
         end)
     else
-        speedButton.BackgroundColor3 = Color3.fromRGB(51,51,51)
-        if speedConnection then
-            speedConnection:Disconnect()
-            speedConnection = nil
-        end
+        speedButton.BackgroundColor3 = Color3.fromRGB(51, 51, 51)
+        if speedConnection then speedConnection:Disconnect() end
+        speedConnection = nil
     end
 end)
 
 local espEnabled = false
 local espBoxes = {}
 
-local function addBox(player)
-    local function createBox(char)
-        local root = char:FindFirstChild("HumanoidRootPart")
-        if not root then return end
-        local box = Instance.new("BoxHandleAdornment")
-        box.Adornee = root
-        box.AlwaysOnTop = true
-        box.ZIndex = 10
-        box.Size = Vector3.new(4,6,2)
-        box.Transparency = 0.5
-        box.Color3 = Color3.new(1,1,1)
-        box.Parent = CoreGui
-        espBoxes[player] = box
+local function createBox(player)
+    local box = {}
+    box.parts = {}
+    local sizeScale = Vector3.new(1,1,1)
+    local function createAdornment(partName, size, color)
+        local adorn = Instance.new("BoxHandleAdornment")
+        adorn.Name = partName
+        adorn.Adornee = nil
+        adorn.AlwaysOnTop = true
+        adorn.ZIndex = 10
+        adorn.Transparency = 0.4
+        adorn.Color3 = color
+        adorn.Size = size
+        adorn.Parent = workspace
+        return adorn
     end
-    if player.Character then
-        createBox(player.Character)
-    end
-    player.CharacterAdded:Connect(function(char)
-        if espEnabled then
-            createBox(char)
-        end
-    end)
-    player.CharacterRemoving:Connect(function()
-        if espBoxes[player] then
-            espBoxes[player]:Destroy()
-            espBoxes[player] = nil
-        end
-    end)
+    local color = Color3.new(1,1,1)
+    box.parts.Head = createAdornment("Head", Vector3.new(2, 1, 1), color)
+    box.parts.Torso = createAdornment("Torso", Vector3.new(2, 2, 1), color)
+    box.parts.LeftArm = createAdornment("LeftArm", Vector3.new(1, 2, 1), color)
+    box.parts.RightArm = createAdornment("RightArm", Vector3.new(1, 2, 1), color)
+    box.parts.LeftLeg = createAdornment("LeftLeg", Vector3.new(1, 2, 1), color)
+    box.parts.RightLeg = createAdornment("RightLeg", Vector3.new(1, 2, 1), color)
+    return box
 end
+
+local function updateBox(box)
+    local char = box.player.Character
+    if not char then return end
+    local head = char:FindFirstChild("Head")
+    local torso = char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso")
+    local leftArm = char:FindFirstChild("LeftUpperArm") or char:FindFirstChild("Left Arm")
+    local rightArm = char:FindFirstChild("RightUpperArm") or char:FindFirstChild("Right Arm")
+    local leftLeg = char:FindFirstChild("LeftUpperLeg") or char:FindFirstChild("Left Leg")
+    local rightLeg = char:FindFirstChild("RightUpperLeg") or char:FindFirstChild("Right Leg")
+    if not head or not torso or not leftArm or not rightArm or not leftLeg or not rightLeg then return end
+    box.parts.Head.Adornee = head
+    box.parts.Torso.Adornee = torso
+    box.parts.LeftArm.Adornee = leftArm
+    box.parts.RightArm.Adornee = rightArm
+    box.parts.LeftLeg.Adornee = leftLeg
+    box.parts.RightLeg.Adornee = rightLeg
+end
+
+local function clearBoxes()
+    for _, box in pairs(espBoxes) do
+        for _, part in pairs(box.parts) do
+            part:Destroy()
+        end
+    end
+    espBoxes = {}
+end
+
+local function removeBox(player)
+    local box = espBoxes[player]
+    if box then
+        for _, part in pairs(box.parts) do
+            part:Destroy()
+        end
+        espBoxes[player] = nil
+    end
+end
+
+Players.PlayerRemoving:Connect(removeBox)
 
 espButton.MouseButton1Click:Connect(function()
     espEnabled = not espEnabled
     if espEnabled then
-        espButton.BackgroundColor3 = Color3.fromRGB(80,80,80)
-        for _,player in pairs(Players:GetPlayers()) do
+        espButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+        for _, player in pairs(Players:GetPlayers()) do
             if player ~= Players.LocalPlayer then
-                addBox(player)
+                removeBox(player)
+                local box = createBox(player)
+                box.player = player
+                espBoxes[player] = box
             end
         end
-        Players.PlayerAdded:Connect(function(player)
-            if player ~= Players.LocalPlayer then
-                addBox(player)
+        spawn(function()
+            while espEnabled do
+                for player, box in pairs(espBoxes) do
+                    if player.Character then
+                        updateBox(box)
+                    else
+                        removeBox(player)
+                    end
+                end
+                RunService.Heartbeat:Wait()
             end
+            clearBoxes()
         end)
     else
-        espButton.BackgroundColor3 = Color3.fromRGB(51,51,51)
-        for _,box in pairs(espBoxes) do
-            box:Destroy()
-        end
-        espBoxes = {}
+        espButton.BackgroundColor3 = Color3.fromRGB(51, 51, 51)
+        clearBoxes()
     end
 end)
 
-local uiVisible = true
+shopButton.MouseButton1Click:Connect(function()
+    local prompt = workspace:FindFirstChild("ShopNPCCash") and workspace.ShopNPCCash:FindFirstChild("OpenInterface")
+    if prompt then fireproximityprompt(prompt) end
+end)
 
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
+local uiVisible = true
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
     if input.KeyCode == Enum.KeyCode.Insert then
         uiVisible = not uiVisible
         frame.Visible = uiVisible
