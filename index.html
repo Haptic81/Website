@@ -17,7 +17,7 @@ gui.Parent = CoreGui
 local frame = Instance.new("Frame")
 frame.AnchorPoint = Vector2.new(0.5, 0.5)
 frame.Position = UDim2.new(0.5, 0, 0.5, 0)
-frame.Size = UDim2.new(0,400,0,250)
+frame.Size = UDim2.new(0,400,0,300)
 frame.BackgroundColor3 = Color3.fromRGB(34,34,34)
 frame.BorderSizePixel = 0
 frame.Visible = true
@@ -53,17 +53,21 @@ gearIcon.Image = "rbxassetid://6726110621"
 gearIcon.BackgroundTransparency = 1
 gearIcon.Parent = frame
 
-local gravityButton = Instance.new("TextButton")
-gravityButton.Text = "Moon Gravity"
-gravityButton.Font = Enum.Font.SourceSans
-gravityButton.TextSize = 16
-gravityButton.TextColor3 = Color3.fromRGB(255,255,255)
-gravityButton.BackgroundColor3 = Color3.fromRGB(51,51,51)
-gravityButton.BorderSizePixel = 0
-gravityButton.Size = UDim2.new(0,130,0,30)
-gravityButton.Position = UDim2.new(0,10,0,35)
-gravityButton.Parent = frame
+local function createButton(text, yPos)
+    local btn = Instance.new("TextButton")
+    btn.Text = text
+    btn.Font = Enum.Font.SourceSans
+    btn.TextSize = 16
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.BackgroundColor3 = Color3.fromRGB(51,51,51)
+    btn.BorderSizePixel = 0
+    btn.Size = UDim2.new(0,130,0,30)
+    btn.Position = UDim2.new(0,10,0,yPos)
+    btn.Parent = frame
+    return btn
+end
 
+local gravityButton = createButton("Moon Gravity",35)
 local stateLabel = Instance.new("TextLabel")
 stateLabel.Text = "OFF"
 stateLabel.Font = Enum.Font.SourceSans
@@ -75,27 +79,9 @@ stateLabel.Position = UDim2.new(0,150,0,35)
 stateLabel.TextXAlignment = Enum.TextXAlignment.Left
 stateLabel.Parent = frame
 
-local teleportButton = Instance.new("TextButton")
-teleportButton.Text = "Teleport Up"
-teleportButton.Font = Enum.Font.SourceSans
-teleportButton.TextSize = 16
-teleportButton.TextColor3 = Color3.fromRGB(255,255,255)
-teleportButton.BackgroundColor3 = Color3.fromRGB(51,51,51)
-teleportButton.BorderSizePixel = 0
-teleportButton.Size = UDim2.new(0,130,0,30)
-teleportButton.Position = UDim2.new(0,10,0,75)
-teleportButton.Parent = frame
-
-local speedButton = Instance.new("TextButton")
-speedButton.Text = "Speed"
-speedButton.Font = Enum.Font.SourceSans
-speedButton.TextSize = 16
-speedButton.TextColor3 = Color3.fromRGB(255,255,255)
-speedButton.BackgroundColor3 = Color3.fromRGB(51,51,51)
-speedButton.BorderSizePixel = 0
-speedButton.Size = UDim2.new(0,130,0,30)
-speedButton.Position = UDim2.new(0,10,0,115)
-speedButton.Parent = frame
+local teleportButton = createButton("Teleport Up",75)
+local speedButton = createButton("Speed",115)
+local espButton = createButton("3D Box ESP",155)
 
 local dragging = false
 local dragInput, dragStart, startPos
@@ -205,7 +191,7 @@ speedButton.MouseButton1Click:Connect(function()
     speedEnabled = not speedEnabled
     if speedEnabled then
         speedButton.BackgroundColor3 = Color3.fromRGB(80,80,80)
-        local SpeedValue = 50
+        local SpeedValue = 57
         local player = Players.LocalPlayer
         local character = player.Character or player.CharacterAdded:Wait()
         local root = character:WaitForChild("HumanoidRootPart")
@@ -215,6 +201,7 @@ speedButton.MouseButton1Click:Connect(function()
             if not speedEnabled then
                 speedConnection:Disconnect()
                 speedConnection = nil
+                root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
                 return
             end
             local moveVector = Vector3.zero
@@ -232,6 +219,8 @@ speedButton.MouseButton1Click:Connect(function()
             end
             if moveVector.Magnitude > 0 then
                 moveVector = moveVector.Unit * SpeedValue
+            else
+                moveVector = Vector3.zero
             end
             root.AssemblyLinearVelocity = Vector3.new(moveVector.X, root.AssemblyLinearVelocity.Y, moveVector.Z)
         end)
@@ -244,30 +233,74 @@ speedButton.MouseButton1Click:Connect(function()
     end
 end)
 
+local espEnabled = false
+local espHighlights = {}
+
+local function addHighlightToCharacter(character)
+    if espHighlights[character] then return end
+    local highlight = Instance.new("Highlight")
+    highlight.Adornee = character
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.FillColor = Color3.fromRGB(0, 170, 255)
+    highlight.OutlineColor = Color3.fromRGB(0, 120, 200)
+    highlight.Parent = gui
+    espHighlights[character] = highlight
+end
+
+local function removeHighlightFromCharacter(character)
+    if espHighlights[character] then
+        espHighlights[character]:Destroy()
+        espHighlights[character] = nil
+    end
+end
+
+local function refreshESP()
+    for _, highlight in pairs(espHighlights) do
+        highlight:Destroy()
+    end
+    espHighlights = {}
+    if espEnabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= Players.LocalPlayer then
+                local character = player.Character
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    addHighlightToCharacter(character)
+                end
+            end
+        end
+    end
+end
+
+espButton.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    if espEnabled then
+        espButton.BackgroundColor3 = Color3.fromRGB(80,80,80)
+        refreshESP()
+        Players.PlayerAdded:Connect(function(player)
+            if espEnabled and player ~= Players.LocalPlayer then
+                player.CharacterAdded:Connect(function(character)
+                    addHighlightToCharacter(character)
+                end)
+            end
+        end)
+        Players.PlayerRemoving:Connect(function(player)
+            removeHighlightFromCharacter(player.Character)
+        end)
+    else
+        espButton.BackgroundColor3 = Color3.fromRGB(51,51,51)
+        for _, highlight in pairs(espHighlights) do
+            highlight:Destroy()
+        end
+        espHighlights = {}
+    end
+end)
+
 local uiVisible = true
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.KeyCode == Enum.KeyCode.Insert then
         if uiVisible then
-            if moonGravityEnabled then
-                moonGravityEnabled = false
-                gravityButton.BackgroundColor3 = Color3.fromRGB(51,51,51)
-                stateLabel.Text = "OFF"
-                if gravityConnection then
-                    gravityConnection:Disconnect()
-                    gravityConnection = nil
-                end
-                resetGravity()
-            end
-            if speedEnabled then
-                speedEnabled = false
-                speedButton.BackgroundColor3 = Color3.fromRGB(51,51,51)
-                if speedConnection then
-                    speedConnection:Disconnect()
-                    speedConnection = nil
-                end
-            end
             frame.Visible = false
             uiVisible = false
         else
