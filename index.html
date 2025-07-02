@@ -47,8 +47,8 @@ madeByLabel.Parent = frame
 
 local gearIcon = Instance.new("ImageButton")
 gearIcon.Size = UDim2.new(0,24,0,24)
-gearIcon.Position = UDim2.new(0, title.Position.X.Offset + title.Size.X.Offset + 5, 0, 3)
-gearIcon.AnchorPoint = Vector2.new(0, 0)
+gearIcon.Position = UDim2.new(1,-28,0,3)
+gearIcon.AnchorPoint = Vector2.new(0,0)
 gearIcon.Image = "rbxassetid://6726110621"
 gearIcon.BackgroundTransparency = 1
 gearIcon.Parent = frame
@@ -109,8 +109,6 @@ UserInputService.InputChanged:Connect(function(input)
     if dragging and input == dragInput then
         local delta = input.Position - dragStart
         frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        gearIcon.Position = UDim2.new(0, frame.Position.X.Offset + title.Size.X.Offset + 5, 0, frame.Position.Y.Offset + 3)
-        madeByLabel.Position = UDim2.new(0, 10, 1, -25)
     end
 end)
 
@@ -121,10 +119,8 @@ local function resetGravity()
     local character = Players.LocalPlayer.Character
     if character then
         local humanoid = character:FindFirstChildWhichIsA("Humanoid")
-        local root = character:FindFirstChild("HumanoidRootPart")
-        if humanoid and root then
+        if humanoid then
             humanoid.JumpPower = 50
-            root.Velocity = Vector3.new(root.Velocity.X, 0, root.Velocity.Z)
         end
     end
 end
@@ -191,7 +187,7 @@ speedButton.MouseButton1Click:Connect(function()
     speedEnabled = not speedEnabled
     if speedEnabled then
         speedButton.BackgroundColor3 = Color3.fromRGB(80,80,80)
-        local SpeedValue = 55
+        local SpeedValue = 55.4
         local player = Players.LocalPlayer
         local character = player.Character or player.CharacterAdded:Wait()
         local root = character:WaitForChild("HumanoidRootPart")
@@ -236,61 +232,53 @@ end)
 local espEnabled = false
 local espBoxes = {}
 
-local function addBoxToCharacter(character)
-    if espBoxes[character] then return end
-    local box = Instance.new("BoxHandleAdornment")
-    box.Adornee = character:FindFirstChild("HumanoidRootPart")
-    box.AlwaysOnTop = true
-    box.ZIndex = 10
-    box.Size = Vector3.new(2, 5, 1)
-    box.Transparency = 0.5
-    box.Color3 = Color3.new(1, 1, 1)
-    box.Parent = CoreGui
-    espBoxes[character] = box
-end
-
-local function removeBoxFromCharacter(character)
-    if espBoxes[character] then
-        espBoxes[character]:Destroy()
-        espBoxes[character] = nil
+local function addBox(player)
+    local function createBox(char)
+        local root = char:FindFirstChild("HumanoidRootPart")
+        if not root then return end
+        local box = Instance.new("BoxHandleAdornment")
+        box.Adornee = root
+        box.AlwaysOnTop = true
+        box.ZIndex = 10
+        box.Size = Vector3.new(4,6,2)
+        box.Transparency = 0.5
+        box.Color3 = Color3.new(1,1,1)
+        box.Parent = CoreGui
+        espBoxes[player] = box
     end
-end
-
-local function refreshESP()
-    for char, box in pairs(espBoxes) do
-        box:Destroy()
+    if player.Character then
+        createBox(player.Character)
     end
-    espBoxes = {}
-    if espEnabled then
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= Players.LocalPlayer then
-                local character = player.Character
-                if character and character:FindFirstChild("HumanoidRootPart") then
-                    addBoxToCharacter(character)
-                end
-            end
+    player.CharacterAdded:Connect(function(char)
+        if espEnabled then
+            createBox(char)
         end
-    end
+    end)
+    player.CharacterRemoving:Connect(function()
+        if espBoxes[player] then
+            espBoxes[player]:Destroy()
+            espBoxes[player] = nil
+        end
+    end)
 end
 
 espButton.MouseButton1Click:Connect(function()
     espEnabled = not espEnabled
     if espEnabled then
         espButton.BackgroundColor3 = Color3.fromRGB(80,80,80)
-        refreshESP()
-        Players.PlayerAdded:Connect(function(player)
-            if espEnabled and player ~= Players.LocalPlayer then
-                player.CharacterAdded:Connect(function(character)
-                    addBoxToCharacter(character)
-                end)
+        for _,player in pairs(Players:GetPlayers()) do
+            if player ~= Players.LocalPlayer then
+                addBox(player)
             end
-        end)
-        Players.PlayerRemoving:Connect(function(player)
-            removeBoxFromCharacter(player.Character)
+        end
+        Players.PlayerAdded:Connect(function(player)
+            if player ~= Players.LocalPlayer then
+                addBox(player)
+            end
         end)
     else
         espButton.BackgroundColor3 = Color3.fromRGB(51,51,51)
-        for _, box in pairs(espBoxes) do
+        for _,box in pairs(espBoxes) do
             box:Destroy()
         end
         espBoxes = {}
@@ -304,34 +292,6 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if input.KeyCode == Enum.KeyCode.Insert then
         uiVisible = not uiVisible
         frame.Visible = uiVisible
-        if not uiVisible then
-            if moonGravityEnabled then
-                gravityButton.BackgroundColor3 = Color3.fromRGB(51,51,51)
-                stateLabel.Text = "OFF"
-                moonGravityEnabled = false
-                if gravityConnection then
-                    gravityConnection:Disconnect()
-                    gravityConnection = nil
-                end
-                resetGravity()
-            end
-            if speedEnabled then
-                speedButton.BackgroundColor3 = Color3.fromRGB(51,51,51)
-                speedEnabled = false
-                if speedConnection then
-                    speedConnection:Disconnect()
-                    speedConnection = nil
-                end
-            end
-            if espEnabled then
-                espButton.BackgroundColor3 = Color3.fromRGB(51,51,51)
-                espEnabled = false
-                for _, box in pairs(espBoxes) do
-                    box:Destroy()
-                end
-                espBoxes = {}
-            end
-        end
     end
 end)
 </pre>
