@@ -1,60 +1,119 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Raw MP3 Host</title>
-  <style>
-    body {
-      background: #111;
-      color: #fff;
-      font-family: monospace;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-    }
-    h1 { margin-bottom: 20px; }
-    input, button {
-      padding: 10px;
-      font-size: 16px;
-      margin: 5px;
-      background: #222;
-      border: 1px solid #333;
-      color: #fff;
-    }
-    audio {
-      margin-top: 20px;
-      width: 300px;
-    }
-    #rawLink {
-      margin-top: 15px;
-      font-size: 14px;
-      word-break: break-all;
-      color: #0f0;
-    }
-  </style>
+<meta charset="UTF-8" />
+<title>Luau Script Generator</title>
+<style>
+  body {
+    background: #111;
+    color: #eee;
+    font-family: monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px;
+  }
+  input, button {
+    padding: 10px;
+    margin: 5px;
+    font-size: 16px;
+    background: #222;
+    border: 1px solid #333;
+    color: #fff;
+    width: 400px;
+  }
+  button {
+    cursor: pointer;
+  }
+  pre {
+    background: #222;
+    padding: 15px;
+    margin-top: 20px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    width: 90%;
+    border: 1px solid #333;
+  }
+</style>
 </head>
 <body>
-  <h1>MP3 Host Generator</h1>
-  <input type="text" id="fileName" placeholder="File name (e.g. song1.mp3)">
-  <input type="text" id="baseUrl" placeholder="Base URL (e.g. https://your.site/audio/)">
-  <button onclick="generate()">Generate Raw Link</button>
-  <div id="rawLink"></div>
-  <audio id="preview" controls autoplay hidden></audio>
+<h2>Luau Script Generator</h2>
+<input id="mp3url" type="text" placeholder="Enter raw MP3 URL (https://... .mp3)">
+<button onclick="generate()">Generate Luau Script</button>
+<pre id="output"></pre>
+<script>
+function generate() {
+  const url = document.getElementById('mp3url').value.trim()
+  if (!url || !/^https?:\/\/.+\.mp3$/i.test(url)) {
+    alert("Enter a valid .mp3 URL")
+    return
+  }
+  const luau = `
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
 
-  <script>
-    function generate() {
-      const name = document.getElementById('fileName').value.trim()
-      const base = document.getElementById('baseUrl').value.trim()
-      if (!name || !base) return alert("Enter file name and base URL")
-      const fullUrl = base + name
-      document.getElementById('rawLink').innerText = fullUrl
-      const audio = document.getElementById('preview')
-      audio.src = fullUrl
-      audio.hidden = false
-    }
-  </script>
+local lp = Players.LocalPlayer
+local gui = Instance.new("ScreenGui", lp:WaitForChild("PlayerGui"))
+gui.Name = "RawMP3Player"
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0,400,0,160)
+frame.Position = UDim2.new(0.5,-200,0.5,-80)
+frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+frame.BorderSizePixel = 0
+
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1,0,0,30)
+title.BackgroundTransparency = 1
+title.Text = "Haptic MP3 Player"
+title.TextColor3 = Color3.new(1,1,1)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 22
+
+local play = Instance.new("TextButton", frame)
+play.Size = UDim2.new(0.3,0,0,30)
+play.Position = UDim2.new(0.05,0,0,60)
+play.BackgroundColor3 = Color3.fromRGB(50,50,50)
+play.Text = "Play"
+play.TextColor3 = Color3.new(1,1,1)
+play.Font = Enum.Font.GothamBold
+play.TextSize = 18
+
+local pause = Instance.new("TextButton", frame)
+pause.Size = UDim2.new(0.3,0,0,30)
+pause.Position = UDim2.new(0.35,0,0,60)
+pause.BackgroundColor3 = Color3.fromRGB(50,50,50)
+pause.Text = "Pause"
+pause.TextColor3 = Color3.new(1,1,1)
+pause.Font = Enum.Font.GothamBold
+pause.TextSize = 18
+
+local stop = Instance.new("TextButton", frame)
+stop.Size = UDim2.new(0.3,0,0,30)
+stop.Position = UDim2.new(0.65,0,0,60)
+stop.BackgroundColor3 = Color3.fromRGB(50,50,50)
+stop.Text = "Stop"
+stop.TextColor3 = Color3.new(1,1,1)
+stop.Font = Enum.Font.GothamBold
+stop.TextSize = 18
+
+local s = Instance.new("Sound", frame)
+s.Volume = 1
+s.Looped = false
+s.SoundId = "${url}"
+
+play.MouseButton1Click:Connect(function()
+    s:Play()
+end)
+pause.MouseButton1Click:Connect(function()
+    if s.IsPlaying then s:Pause() end
+end)
+stop.MouseButton1Click:Connect(function()
+    s:Stop()
+end)
+`
+  document.getElementById('output').textContent = luau.trim()
+}
+</script>
 </body>
 </html>
